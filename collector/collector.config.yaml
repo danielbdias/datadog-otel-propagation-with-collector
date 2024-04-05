@@ -14,14 +14,27 @@ processors:
     sampling_percentage: 100
   batch:
     timeout: 100ms
+  transform:
+    # error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - set(cache["upper_trace_id"], attributes["_dd.p.tid"]) where attributes["_dd.p.tid"] != nil
+          - set(cache["lower_trace_id"], Substring(trace_id.string, 16, 16)) where cache["upper_trace_id"] != nil
+          - set(cache["combined_trace_id"], Concat([cache["upper_trace_id"], cache["lower_trace_id"]],"")) where cache["upper_trace_id"] != nil
+          - set(trace_id.string, cache["combined_trace_id"]) where cache["combined_trace_id"] != nil
+          - set(attributes["__desired_trace_id"], Concat([attributes["_dd.p.tid"], Substring(trace_id.string, 16, 16)],"")) where attributes["_dd.p.tid"] != nil
+          - set(attributes["__concat_trace_id"], Concat([attributes["_dd.p.tid"], trace_id.string],"")) where attributes["_dd.p.tid"] != nil
+          - set(attributes["__actual_trace_id"], trace_id.string) where attributes["_dd.p.tid"] != nil
 
 exporters:
   debug:
+    verbosity: detailed
 
-  otlp/tracetest:
-    endpoint: tracetest-agent:4317
-    tls:
-      insecure: true
+  # otlp/tracetest:
+  #   endpoint: host.docker.internal:4317
+  #   tls:
+  #     insecure: true
 
   otlp/jaeger:
     endpoint: jaeger:4317
@@ -32,5 +45,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp, datadog]
-      processors: [probabilistic_sampler, batch]
-      exporters: [otlp/tracetest, otlp/jaeger]
+      processors: [transform, probabilistic_sampler, batch]
+      exporters: [otlp/jaeger, debug]
+      # processors: [probabilistic_sampler, batch]
+      # exporters: [otlp/tracetest, otlp/jaeger, debug]

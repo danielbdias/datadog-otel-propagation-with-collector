@@ -17,5 +17,5 @@ Datadog.configure do |c|
 
   c.tracing.distributed_tracing.propagation_style = [ 'tracecontext' ]
 
-  c.tracing.trace_id_128_bit_generation_enabled = true
+  # c.tracing.trace_id_128_bit_generation_enabled = true
 end
