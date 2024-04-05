@@ -43,16 +43,13 @@ services:
       - "/otel-local-config.yaml"
     volumes:
       - ./collector/collector.config.yaml:/otel-local-config.yaml
-    # ports:
-    #   - 8126:8126
-    #   - 4318:4318
 
-  # tracetest-agent:
-  #   image: kubeshop/tracetest-agent:latest
-  #   environment:
-  #     TRACETEST_DEV: ${TRACETEST_DEV}
-  #     TRACETEST_API_KEY: ${TRACETEST_API_KEY}
-  #     TRACETEST_MODE: verbose
+  tracetest-agent:
+    image: kubeshop/tracetest-agent:latest
+    environment:
+      TRACETEST_DEV: ${TRACETEST_DEV}
+      TRACETEST_API_KEY: ${TRACETEST_API_KEY}
+      TRACETEST_MODE: verbose
 
   jaeger:
     image: jaegertracing/all-in-one:latest

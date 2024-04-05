@@ -19,3 +19,29 @@ Datadog.configure do |c|
 
   # c.tracing.trace_id_128_bit_generation_enabled = true
 end
+
+module Datadog
+  module Tracing
+    module Transport
+      class SerializableTrace
+        def to_msgpack(packer = nil)
+          upper_trace_id = trace.spans.find { |span| span.meta.has_key?('_dd.p.tid') }.meta['_dd.p.tid']
+          trace.spans.each do |span|
+            span.meta["propagation.upper_trace_id"] = upper_trace_id
+          end
+
+          trace.spans.map { |s| SerializableSpan.new(s) }.to_msgpack(packer)
+        end
+
+        def to_json(*args)
+          upper_trace_id = trace.spans.find { |span| span.meta.has_key?('_dd.p.tid') }.meta['_dd.p.tid']
+          trace.spans.each do |span|
+            span.meta["propagation.upper_trace_id"] = upper_trace_id
+          end
+
+          trace.spans.map { |s| SerializableSpan.new(s).to_hash }.to_json(*args)
+        end
+      end
+    end
+  end
+end
